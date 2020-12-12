@@ -1,31 +1,50 @@
+;;**********************************************************
+;; Chapter 2: Do It, Do It Again, and
+;;            Again, and Again...
+;;**********************************************************
+
 #lang racket
 
-(require "the-little-schemer.rkt")
+(require "the-little-schemer.rkt"
+         rackunit)
 
-(lat? '(Jack Sprat could eat no chicken fat))
+(check-true (lat? '(Jack Sprat could eat no chicken fat)))
 
-(lat? '((Jack) Sprat could eat no chicken fat))
+(check-false (lat? '((Jack) Sprat could eat no chicken fat)))
 
-(lat? '(Jack (Sprat could) eat no chicken fat))
+(check-false (lat? '(Jack (Sprat could) eat no chicken fat)))
 
-(lat? '(bacon and eggs))
+(check-true (lat? '()))
 
-(lat? '(bacon (and eggs)))
+(check-true (lat? '(bacon and eggs)))
 
-(or (null? '()) (atom? '(d e f g)))
+(check-false (lat? '(bacon (and eggs))))
 
-(or (null? '(a b c)) (null? '(atom)))
+(check-true (or (null? '()) (atom? '(d e f g))))
 
-(member? 'tea '(coffee tea or milk))
+(check-true (or (null? '(a b c)) (null? '())))
 
-(member? 'poached '(fried eggs and scrambled eggs))
+(check-false (or (null? '(a b c)) (null? '(atom))))
 
-;**********************************************************
-;The First Commandment (preliminary)
-;
-;Always ask null? as the first question in expressing any function.
-;**********************************************************
+(check-true (member? 'tea '(coffee tea or milk)))
 
-(member? 'meat '(mashed potatoes and meat gravy))
+(check-false (member? 'poached '(fried eggs and scrambled eggs)))
 
-(member? 'liver '(bagels and lox))
+;;**********************************************************
+;; The First Commandment (preliminary)
+;;
+;; Always ask null? as the first question in expressing
+;; any function.
+;;**********************************************************
+
+(check-true (member? 'meat '(mashed potatoes and meat gravy)))
+
+(check-true (member? 'meat '(meat gravy)))
+
+(check-true (member? 'meat '(and meat gravy)))
+
+(check-true (member? 'meat '(potatoes and meat gravy)))
+
+(check-true (member? 'meat '(mashed potatoes and meat gravy)))
+
+(check-false (member? 'liver '(bagels and lox)))

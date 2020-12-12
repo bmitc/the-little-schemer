@@ -8,6 +8,10 @@
 
 (provide (all-defined-out))
 
+;;**********************************************************
+;; Preface
+;;**********************************************************
+
 ;; Predicate for determining if a value is an atom or not.
 ;; The definition of this is found in the preface.
 (define (atom? x)
@@ -16,6 +20,12 @@
 ;; becuase x may be an atom, which racket-null? supports and null? (as defined
 ;; in the book and thus our contracted version) does not.
 
+
+;;**********************************************************
+;; Chapter 1
+;;**********************************************************
+
+;; Predicate for determining if a value is an S-expression or not
 (define (s-exp? x)
   (or (atom? x) (list? x)))
 
@@ -38,7 +48,11 @@
   (-> (and/c atom? (not/c number?)) (and/c atom? (not/c number?)) boolean?)
   (racket-eq? a b))
 
-;; Predicate for deterimining if a value is a
+;;**********************************************************
+;; Chapter 2
+;;**********************************************************
+
+;; Predicate for determining if a value is a list of atoms or not
 (define lat?
   (lambda (l)
     (cond
@@ -46,11 +60,12 @@
       [(atom? (car l)) (lat? (cdr l))]
       [else #f])))
 
+;; Predicate for determining if a value is an element of the list of atoms or not
 (define member?
   (lambda (a lat)
     (cond
       [(null? lat) #f]
-      [else (or (racket-eq? (car lat) a)
+      [else (or (eq? (car lat) a)
                 (member? a (cdr lat)))])))
 
 (define rember
