@@ -1,12 +1,13 @@
 #lang racket
 
 ;; Used to redefine Racket functions in terms of the original functions
-(require (only-in racket
-                  (cons racket-cons)
-                  (null? racket-null?)
-                  (eq? racket-eq?)))
+(require (rename-in racket
+                    [cons racket-cons]
+                    [null? racket-null?]
+                    [eq? racket-eq?]))
 
 (provide (all-defined-out))
+
 
 ;;**********************************************************
 ;; Preface
@@ -48,6 +49,7 @@
   (-> (and/c atom? (not/c number?)) (and/c atom? (not/c number?)) boolean?)
   (racket-eq? a b))
 
+
 ;;**********************************************************
 ;; Chapter 2
 ;;**********************************************************
@@ -68,13 +70,107 @@
       [else (or (eq? (car lat) a)
                 (member? a (cdr lat)))])))
 
+
+;;**********************************************************
+;; Chapter 3
+;;**********************************************************
+
+;; Removes the first occurence of the atom, if possible, in the list of atoms
 (define rember
   (lambda (a lat)
     (cond
       [(null? lat) '()]
-      [(racket-eq? a (car lat)) (cdr lat)]
-      [else (racket-cons (car lat)
-                         (rember a (cdr lat)))])))
+      [(eq? a (car lat)) (cdr lat)]
+      [else (cons (car lat)
+                  (rember a (cdr lat)))])))
+
+;; Takes a list and returns a list of the first elements of each sublist
+(define firsts
+  (lambda (l)
+    (cond
+      [(null? l) '()]
+      [else (cons (car (car l))
+                  (firsts (cdr l)))])))
+
+;; Inserts new after the first occurrence, if any, of old in lat, a list of atoms
+(define insertR
+  (lambda (new old lat)
+    (cond
+      [(null? lat) '()]
+      [(eq? old (car lat)) (cons old
+                                 (cons new (cdr lat)))]
+      [else (cons (car lat)
+                  (insertR new old (cdr lat)))])))
+
+;; Inserts new before the first occurrence, if any, of old in lat, a list of atoms
+(define insertL
+  (lambda (new old lat)
+    (cond
+      [(null? lat) '()]
+      [(eq? old (car lat)) (cons new lat)] ; since (cons old (cdr lat)) = lat when old = (car lat)
+      [else (cons (car lat)
+                  (insertL new old (cdr lat)))])))
+
+;; Replaces the first occurrence of old, if any, with new, in lat, a list of atoms
+(define subst
+  (lambda (new old lat)
+    (cond
+      [(null? lat) '()]
+      [(eq? old (car lat)) (cons new (cdr lat))]
+      [else (cons (car lat)
+                  (subst new old (cdr lat)))])))
+
+;; Replaces the first occurence of o1 or o2, if any, in lat, a list of atoms
+(define subst2
+  (lambda (new o1 o2 lat)
+    (cond
+      [(null? lat) '()]
+      [(or (eq? o1 (car lat)) (eq? o2 (car lat))) (cons new (cdr lat))]
+      [else (cons (car lat)
+                  (subst2 new o1 o2 (cdr lat)))])))
+
+;; Removes all occurrences of a in lat, a list of atoms
+(define multirember
+  (lambda (a lat)
+    (cond
+      [(null? lat) '()]
+      [(eq? a (car lat)) (multirember a (cdr lat))]
+      [else (cons (car lat)
+                  (multirember a (cdr lat)))])))
+
+;; Inserts new after all occurrences of old in lat, a list of atoms
+(define multiinsertR
+  (lambda (new old lat)
+    (cond
+      [(null? lat) '()]
+      [(eq? old (car lat)) (cons old
+                                 (cons new (multiinsertR (cdr lat))))]
+      [else (cons (car lat)
+                  (multiinsertR new old (cdr lat)))])))
+
+;; Inserts new before all occurrences of old in lat, a list of atoms
+(define multiinsertL
+  (lambda (new old lat)
+    (cond
+      [(null? lat) '()]
+      [(eq? old (car lat)) (cons new
+                                 (cons (car lat) (multiinsertL (cdr lat))))] ; since (cons old (cdr lat)) = lat when old = (car lat)
+      [else (cons (car lat)
+                  (multiinsertL new old (cdr lat)))])))
+
+;; Replaces all occurrences of old with new in lat, a list of atoms
+(define multisubst
+  (lambda (new old lat)
+    (cond
+      [(null? lat) '()]
+      [(eq? old (car lat)) (cons new (multisubst (cdr lat)))]
+      [else (cons (car lat)
+                  (multisubst new old (cdr lat)))])))
+
+
+;;**********************************************************
+;; Tests
+;;**********************************************************
 
 (module+ test
   (require rackunit)
