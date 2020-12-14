@@ -4,7 +4,10 @@
 (require (rename-in racket
                     [cons racket-cons]
                     [null? racket-null?]
-                    [eq? racket-eq?]))
+                    [eq? racket-eq?]
+                    [+ racket+]
+                    [- racket-]
+                    [number? racket-number?]))
 
 (provide (all-defined-out))
 
@@ -13,6 +16,7 @@
 ;; Preface
 ;;**********************************************************
 
+;; [Helper]
 ;; Predicate for determining if a value is an atom or not.
 ;; The definition of this is found in the preface.
 (define (atom? x)
@@ -26,10 +30,12 @@
 ;; Chapter 1
 ;;**********************************************************
 
+;; [Helper]
 ;; Predicate for determining if a value is an S-expression or not
 (define (s-exp? x)
   (or (atom? x) (list? x)))
 
+;; [Helper]
 ;; Provide a cons as defined in the book such that it requires a list as
 ;; the second argument. This is enforced using Racket's contract system.
 ;; Racket's cons works on any values, as mentioned in the footnote on page 8.
@@ -37,16 +43,18 @@
   (-> any/c list? list?)
   (racket-cons s l))
 
+;; [Helper]
 ;; Provide a cons as defined in the book such that it requires a list as
 ;; the argument. See the footnote on page 10.
 (define/contract (null? l)
   (-> list? boolean?)
   (racket-null? l))
 
+;; [Helper]
 ;; Provide an eq? as defined in the book such that it requires a non-numeric
 ;; atom for each argument. See the footnotes on page 12.
 (define/contract (eq? a b)
-  (-> (and/c atom? (not/c number?)) (and/c atom? (not/c number?)) boolean?)
+  (-> (and/c atom? (not/c racket-number?)) (and/c atom? (not/c racket-number?)) boolean?)
   (racket-eq? a b))
 
 
@@ -166,6 +174,168 @@
       [(eq? old (car lat)) (cons new (multisubst (cdr lat)))]
       [else (cons (car lat)
                   (multisubst new old (cdr lat)))])))
+
+
+;;**********************************************************
+;; Chapter 4
+;;**********************************************************
+
+;; Adds 1 to the number n
+(define add1
+  (lambda (n)
+    (racket+ n 1)))
+
+;; Subtracts 1 from the number n
+(define sub1
+  (lambda (n)
+    (racket- n 1)))
+
+;; Add two non-negative integer numbers
+(define +
+  (lambda (n m)
+    (cond
+      [(zero? m) n]
+      [else (+ (add1 n) (sub1 m))])))
+; I think this is more clear by adding 1 to n rather than the result
+
+;; Subtract two non-negative integer numbers
+(define -
+  (lambda (n m)
+    (cond
+      [(zero? m) n]
+      [else (- (sub1 n) (sub1 m))])))
+; I think this is more clear by subtracting 1 from n rather than the result
+
+;; [Helper]
+;; Predicate for determining if a list is a list of non-negative numbers or not
+(define (tup? x)
+  (andmap exact-nonnegative-integer? x))
+
+;; Adds all the numbers in a tuple together
+(define addtup
+  (lambda (tup)
+    (cond
+      [(null? tup) 0]
+      [else (+ (car tup) (addtup (cdr tup)))])))
+
+;; Multiples two non-negative integer numbers
+(define ×
+  (lambda (n m)
+    (cond
+      [(zero? m) 0]
+      [else (+ n (× n (sub1 m)))])))
+
+;; Adds the elements of two tuples together
+(define tup+
+  (lambda (tup1 tup2)
+    (cond
+      [(null? tup1) tup2]
+      [(null? tup2) tup1]
+      [else (cons (+ (car tup1) (car tup2))
+                  (tup+ (cdr tup1) (cdr tup2)))])))
+
+;; Determines if n > m
+(define >
+  (lambda (n m)
+    (cond
+      [(zero? n) #f]
+      [(zero? m) #t]
+      [else (> (sub1 n) (sub1 m))])))
+
+;; Determines if n < m
+(define <
+  (lambda (n m)
+    (cond
+      [(zero? m) #f]
+      [(zero? n) #t]
+      [else (< (sub1 n) (sub1 m))])))
+
+;; Determines if two numbers are equal or not
+(define =
+  (lambda (n m)
+    (cond
+      [(< n m) #f]
+      [(> n m) #f]
+      [else #t])))
+
+;; Computes n to the power of m
+(define ↑
+  (lambda (n m)
+    (cond
+      [(zero? m) 1]
+      [else (× n (↑ n (sub1 m)))])))
+
+;; Computes how many times m divides n
+(define ÷
+  (lambda (n m)
+    (cond
+      [(< n m) 0]
+      [else (add1 (÷ (- n m) m))])))
+
+;; Returns the length of lat, a list of atoms
+(define length
+  (lambda (lat)
+    (cond
+      [(null? lat) 0]
+      [else (add1 (length (cdr lat)))])))
+
+;; Picks the nth element of lat, a list of atoms
+(define pick
+  (lambda (n lat)
+    (cond
+      [(zero? (sub1 n)) (car lat)]
+      [else (pick (sub1 n) (cdr lat))])))
+
+;; Removes the nth element from lat, a list of atoms
+(define rempick
+  (lambda (n lat)
+    (cond
+      [(one? n) (cdr lat)]
+      [else (cons (car lat)
+                  (rempick (sub1 n) (cdr lat)))])))
+
+;; [Helper]
+;; Predicate for determining if a value is a numeric atom, i.e. a non-negative integer, or not
+(define (number? x)
+  (exact-nonnegative-integer? x))
+
+;; Removes all numbers from lat, a list of atoms
+(define no-nums
+  (lambda (lat)
+    (cond
+      [(null? lat) '()]
+      [(number? (car lat)) (no-nums (cdr lat))]
+      [else (cons (car lat)
+                  (no-nums (cdr lat)))])))
+
+;; Returns a tuple made out of all the numbers in lat, a list of atoms
+(define all-nums
+  (lambda (lat)
+    (cond
+      [(null? lat) '()]
+      [(number? (car lat)) (cons (car lat) (all-nums (cdr lat)))]
+      [else (all-nums (cdr lat))])))
+
+;; Predicate that determines if a1 and a2 are the same number or same atom
+(define eqan?
+  (lambda (a1 a2)
+    (cond
+      [(and (number? a1) (number? a2)) (= a1 a2)]
+      [(or (number? a1) (number? a2)) #f]
+      [else (eq? a1 a2)])))
+
+;; Counts the number of times the atom a occurs in lat, a list of atoms
+(define occur
+  (lambda (a lat)
+    (cond
+      [(null? lat) 0]
+      [(eq? a (car lat)) (add1 (occur a (cdr lat)))]
+      [else (occur a (cdr lat))])))
+
+;; Predicate that determines if n is 1 or not
+(define one?
+  (lambda (n)
+    (= n 1)))
 
 
 ;;**********************************************************
