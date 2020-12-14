@@ -16,7 +16,7 @@
 ;; Preface
 ;;**********************************************************
 
-;; [Helper]
+;; [Primitive]
 ;; Predicate for determining if a value is an atom or not.
 ;; The definition of this is found in the preface.
 (define (atom? x)
@@ -30,7 +30,7 @@
 ;; Chapter 1
 ;;**********************************************************
 
-;; [Helper]
+;; [Primitive]
 ;; Predicate for determining if a value is an S-expression or not
 (define (s-exp? x)
   (or (atom? x) (list? x)))
@@ -43,14 +43,14 @@
   (-> any/c list? list?)
   (racket-cons s l))
 
-;; [Helper]
+;; [Primitive]
 ;; Provide a cons as defined in the book such that it requires a list as
 ;; the argument. See the footnote on page 10.
 (define/contract (null? l)
   (-> list? boolean?)
   (racket-null? l))
 
-;; [Helper]
+;; [Primitive]
 ;; Provide an eq? as defined in the book such that it requires a non-numeric
 ;; atom for each argument. See the footnotes on page 12.
 (define/contract (eq? a b)
@@ -206,7 +206,7 @@
       [else (- (sub1 n) (sub1 m))])))
 ; I think this is more clear by subtracting 1 from n rather than the result
 
-;; [Helper]
+;; [Primitive]
 ;; Predicate for determining if a list is a list of non-negative numbers or not
 (define (tup? x)
   (andmap exact-nonnegative-integer? x))
@@ -294,7 +294,7 @@
       [else (cons (car lat)
                   (rempick (sub1 n) (cdr lat)))])))
 
-;; [Helper]
+;; [Primitive]
 ;; Predicate for determining if a value is a numeric atom, i.e. a non-negative integer, or not
 (define (number? x)
   (exact-nonnegative-integer? x))
