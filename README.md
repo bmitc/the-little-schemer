@@ -22,3 +22,13 @@ I read through parts of this book a few years ago but was just reading through i
 * The beauty of Scheme and Racket
 * Recursion
 * Being clear about assumptions and what questions are being asked
+
+## How this might be useful for others
+
+The code for the book is mainly located in [`the-little-schemer.rkt`](source/the-little-schemer.rkt), which contains both the implementations of the primitives for the Scheme language found in the book and the functions. The files named `chapter-<number>.rkt` contain annotations for all the questions in the book, implemented as tests. I could see this being useful in the following ways:
+
+1. Simply use the implementations and tests as references when going through the book yourself and making your own implementations as I did.
+2. Using the primitive and function implementations as they are, but then follow the book by implementing your own tests.
+3. Use the primitive implementations to help guide your own function implementations and tests, so that you can use the Scheme language as it appears in the book.
+
+I personally found writing the tests and my own primitives and functions a nice task, which taught me a few new things about Racket's contracts and testing.
