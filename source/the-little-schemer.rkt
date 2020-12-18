@@ -1,4 +1,4 @@
-#lang racket
+ #lang racket
 
 ;; Used to redefine Racket functions in terms of the original functions
 (require (rename-in racket
@@ -35,7 +35,7 @@
 (define (s-exp? x)
   (or (atom? x) (list? x)))
 
-;; [Helper]
+;; [Primitive]
 ;; Provide a cons as defined in the book such that it requires a list as
 ;; the second argument. This is enforced using Racket's contract system.
 ;; Racket's cons works on any values, as mentioned in the footnote on page 8.
@@ -152,7 +152,8 @@
     (cond
       [(null? lat) '()]
       [(eq? old (car lat)) (cons old
-                                 (cons new (multiinsertR (cdr lat))))]
+                                 (cons new
+                                       (multiinsertR new old (cdr lat))))]
       [else (cons (car lat)
                   (multiinsertR new old (cdr lat)))])))
 
@@ -162,7 +163,8 @@
     (cond
       [(null? lat) '()]
       [(eq? old (car lat)) (cons new
-                                 (cons (car lat) (multiinsertL (cdr lat))))] ; since (cons old (cdr lat)) = lat when old = (car lat)
+                                 (cons (car lat)
+                                       (multiinsertL new old (cdr lat))))] ; since (cons old (cdr lat)) = lat when old = (car lat)
       [else (cons (car lat)
                   (multiinsertL new old (cdr lat)))])))
 
@@ -171,7 +173,7 @@
   (lambda (new old lat)
     (cond
       [(null? lat) '()]
-      [(eq? old (car lat)) (cons new (multisubst (cdr lat)))]
+      [(eq? old (car lat)) (cons new (multisubst new old (cdr lat)))]
       [else (cons (car lat)
                   (multisubst new old (cdr lat)))])))
 
@@ -339,15 +341,49 @@
 
 
 ;;**********************************************************
+;; Chapter 5
+;;**********************************************************
+
+;;
+(define rember*
+  (lambda (a l)
+    (cond
+      [(null? l) '()]
+      [(atom? (car l))
+       (cond
+         [(eq? a (car l)) (rember* a (cdr l))]
+         [else (cons (car l) (rember* a (cdr l)))])]
+      [else (cons (rember* a (car l)) (rember* a (cdr l)))])))
+
+(define insertR*
+  (lambda (new old l)
+    (cond
+      [(null? l) '()]
+      [(atom? (car l))
+       (cond
+         [(eq? old (car l)) (cons (cons (insertR* new old (cdr l)) old) new)]
+         [else (cons (car l) (insertR* new old (cdr l)))])]
+      [else (cons (insertR* new old (car l)) (insertR* new old (cdr l)))])))
+
+
+;;**********************************************************
 ;; Tests
 ;;**********************************************************
 
 (module+ test
   (require rackunit)
 
+  ;;********************************************************
+  ;; Primitives
+  ;;********************************************************
+
   (check-false (atom? (quote ())))
 
   (check-false (atom? '()))
+
+  (check-true (s-exp? '()))
+
+  (check-true (s-exp? 'symbol))
 
   (check-equal? (cons 'a '()) '(a))
 

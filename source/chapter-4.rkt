@@ -1,5 +1,5 @@
 ;;**********************************************************
-;; Chapter 3: Cons the Magnificent
+;; Chapter 4: Numbers Games
 ;;**********************************************************
 
 #lang racket
@@ -100,6 +100,12 @@
 
 (check-false (< 6 6))
 
+;; Added test not in the book
+(check-true (= 1 1))
+
+;; Added test not in the book
+(check-false (= 0 9))
+
 (check-equal? (↑ 1 1) 1)
 
 (check-equal? (↑ 2 3) 8)
@@ -129,3 +135,29 @@
 
 (check-equal? (all-nums '(5 pears 6 prunes 9 dates))
               '(5 6 9))
+
+;; Added test not in the book
+(check-true (eqan? 'a 'a))
+
+;; Added test not in the book
+(check-true (eqan? 2 2))
+
+;; Added test not in the book
+(check-false (eqan? 'test 3))
+
+;; Added test not in the book
+(check-equal? (occur 'b '(a b a b c d e f b))
+             3)
+
+;; Added test not in the book
+(check-equal? (occur 'b '(a c d e f g))
+              0)
+
+;; Added test not in the book
+(check-true (one? 1))
+
+;; Added test not in the book
+(check-false (one? 0))
+
+;; Added test not in the book
+(check-false (one? 3))

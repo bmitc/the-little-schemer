@@ -15,7 +15,7 @@
 
 (check-true (atom? 'u))
 
-(check-true (atom?  '*abc$))
+(check-true (atom? '*abc$))
 
 (check-true (list? '(atom)))
 

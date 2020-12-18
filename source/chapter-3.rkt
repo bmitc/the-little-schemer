@@ -69,6 +69,10 @@
 (check-equal? (insertR 'e 'd '(a b c d f g d h))
               '(a b c d e f g d h))
 
+;; Added test not in the book
+(check-equal? (insertL 'e 'd '(a b c d f g d h))
+              '(a b c e d f g d h))
+
 (check-equal? (subst 'topping 'fudge '(ice cream with fudge for dessert))
               '(ice cream with topping for dessert))
 
@@ -77,6 +81,14 @@
 
 (check-equal? (multirember 'cup '(coffee cup tea cup and hick cup))
               '(coffee tea and hick))
+
+;; Added test not in the book
+(check-equal? (multiinsertR 'e 'd '(a b c d f g d h))
+              '(a b c d e f g d e h))
+
+;; Added test not in the book
+(check-equal? (multiinsertL 'fried 'fish '(chips and fish or fish and fried))
+              '(chips and fried fish or fried fish and fried))
 
 ;;**********************************************************
 ;; The Fourth Commandment (preliminary)
@@ -87,3 +99,6 @@
 ;; when using cdr, test termination with null?.
 ;;**********************************************************
 
+;; Added test not in the book
+(check-equal? (multisubst 'glass 'cup '(coffee cup tea cup and hick cup))
+              '(coffee glass tea glass and hick glass))
