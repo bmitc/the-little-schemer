@@ -1,4 +1,4 @@
- #lang racket
+#lang racket
 
 ;; Used to redefine Racket functions in terms of the original functions
 (require (rename-in racket
@@ -84,7 +84,8 @@
 ;;**********************************************************
 
 ;; Removes the first occurence of the atom, if possible, in the list of atoms
-(define rember
+;; (Rewritten below in the Chapter 5 section using equal? as instructed by the book)
+#;(define rember
   (lambda (a lat)
     (cond
       [(null? lat) '()]
@@ -344,7 +345,7 @@
 ;; Chapter 5
 ;;**********************************************************
 
-;;
+;; Removes the atom a everywhere it occurs the list l
 (define rember*
   (lambda (a l)
     (cond
@@ -355,15 +356,115 @@
          [else (cons (car l) (rember* a (cdr l)))])]
       [else (cons (rember* a (car l)) (rember* a (cdr l)))])))
 
+;; Inserts new to the right of where old appears everywhere in the list l
 (define insertR*
   (lambda (new old l)
     (cond
       [(null? l) '()]
       [(atom? (car l))
        (cond
-         [(eq? old (car l)) (cons (cons (insertR* new old (cdr l)) old) new)]
+         [(eq? old (car l)) (cons old
+                                  (cons new
+                                        (insertR* new old (cdr l))))]
          [else (cons (car l) (insertR* new old (cdr l)))])]
-      [else (cons (insertR* new old (car l)) (insertR* new old (cdr l)))])))
+      [else (cons (insertR* new old (car l))
+                  (insertR* new old (cdr l)))])))
+
+;; Counts how many times the atom a occurs in the list l
+(define occur*
+  (lambda (a l)
+    (cond
+      [(null? l) 0]
+      [(atom? (car l))
+       (cond
+         [(eq? a (car l)) (add1 (occur* a (cdr l)))]
+         [else (occur* a (cdr l))])]
+      [else (+ (occur* a (car l))
+               (occur* a (cdr l)))])))
+
+;; Replaces old with new everywhere old appears in the list l
+(define subst*
+  (lambda (new old l)
+    (cond
+      [(null? l) '()]
+      [(atom? (car l))
+       (cond
+         [(eq? old (car l)) (cons new
+                                  (subst* new old (cdr l)))]
+         [else (cons (car l)
+                     (subst* new old (cdr l)))])]
+      [else (cons (subst* new old (car l))
+                  (subst* new old (cdr l)))])))
+
+;; Inserts new to the left of where old appears everywhere in the list l
+(define insertL*
+  (lambda (new old l)
+    (cond
+      [(null? l) '()]
+      [(atom? (car l))
+       (cond
+         [(eq? old (car l)) (cons new
+                                  (cons old
+                                        (insertL* new old (cdr l))))]
+         [else (cons (car l) (insertL* new old (cdr l)))])]
+      [else (cons (insertL* new old (car l))
+                  (insertL* new old (cdr l)))])))
+
+;; Determines if the atom is found in the list l
+(define member*
+  (lambda (a l)
+    (cond
+      [(null? l) #f]
+      [(atom? (car l)) (or (eq? a (car l))
+                           (member* a (cdr l)))]
+      [else (or (member* a (car l))
+                (member* a (cdr l)))])))
+
+;; Returns the leftmost atom in a non-empty list
+(define leftmost
+  (lambda (l)
+    (cond
+      [(atom? (car l)) (car l)]
+      [else (leftmost (car l))])))
+
+;; Determines if the two lists are equal or not
+;; (Rewritten below using equal? as instructed by the book)
+#;(define eqlist?
+  (lambda (l1 l2)
+    (cond
+      [(and (null? l1) (null? l2)) #t]
+      [(or (null? l1) (null? l2)) #f]
+      [(and (atom? (car l1)) (atom? (car l2))) (and (eqan? (car l1) (car l2))
+                                                    (eqlist? (cdr l1) (cdr l2)))]
+      [(or (atom? (car l1)) (atom? (car l2))) #f]
+      [else (and (eqlist? (car l1) (car l2))
+                 (eqlist? (cdr l1) (cdr l2)))])))
+
+;; Determines if the two S-expressions are equal or not
+(define equal?
+  (lambda (s1 s2)
+    (cond
+      [(and (atom? s1) (atom? s2)) (eqan? s1 s2)]
+      [(or (atom? s1) (atom? s2)) #f]
+      [else (eqlist? s1 s2)])))
+
+;; Determines if the two lists are equal or not
+(define eqlist?
+  (lambda (l1 l2)
+    (cond
+      [(and (null? l1) (null? l2)) #t]
+      [(or (null? l1) (null? l2)) #f]
+      [else (and (equal? (car l1) (car l2))
+                 (equal? (cdr l1) (cdr l2)))])))
+
+;; Removes the first occurence of the atom, if possible, in the list of atoms
+(define rember
+  (lambda (s l)
+    (cond
+      [(null? l) '()]
+      [(equal? s (car l)) (cdr l)]
+      [else (cons (car l)
+                  (rember s (cdr l)))])))
 
 
 ;;**********************************************************
