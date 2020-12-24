@@ -71,12 +71,12 @@
       [else #f])))
 
 ;; Predicate for determining if a value is an element of the list of atoms or not
-(define member?
-  (lambda (a lat)
-    (cond
-      [(null? lat) #f]
-      [else (or (eq? (car lat) a)
-                (member? a (cdr lat)))])))
+#;(define member?
+    (lambda (a lat)
+      (cond
+        [(null? lat) #f]
+        [else (or (eq? (car lat) a)
+                  (member? a (cdr lat)))])))
 
 
 ;;**********************************************************
@@ -139,13 +139,13 @@
                   (subst2 new o1 o2 (cdr lat)))])))
 
 ;; Removes all occurrences of a in lat, a list of atoms
-(define multirember
-  (lambda (a lat)
-    (cond
-      [(null? lat) '()]
-      [(eq? a (car lat)) (multirember a (cdr lat))]
-      [else (cons (car lat)
-                  (multirember a (cdr lat)))])))
+#;(define multirember
+    (lambda (a lat)
+      (cond
+        [(null? lat) '()]
+        [(eq? a (car lat)) (multirember a (cdr lat))]
+        [else (cons (car lat)
+                    (multirember a (cdr lat)))])))
 
 ;; Inserts new after all occurrences of old in lat, a list of atoms
 (define multiinsertR
@@ -495,12 +495,12 @@
 
 ;; Evaluates the value of a numbered arithmetic expression
 #;(define value
-  (lambda (nexp)
-    (cond
-      [(atom? nexp) nexp] ; Really should ask number? and not just atom?
-      [(eq? (car (cdr nexp)) (quote +)) (+ (value (car nexp)) (value (car (cdr (cdr nexp)))))]
-      [(eq? (car (cdr nexp)) (quote ×)) (× (value (car nexp)) (value (car (cdr (cdr nexp)))))]
-      [(eq? (car (cdr nexp)) (quote ↑)) (↑ (value (car nexp)) (value (car (cdr (cdr nexp)))))])))
+    (lambda (nexp)
+      (cond
+        [(atom? nexp) nexp] ; Really should ask number? and not just atom?
+        [(eq? (car (cdr nexp)) (quote +)) (+ (value (car nexp)) (value (car (cdr (cdr nexp)))))]
+        [(eq? (car (cdr nexp)) (quote ×)) (× (value (car nexp)) (value (car (cdr (cdr nexp)))))]
+        [(eq? (car (cdr nexp)) (quote ↑)) (↑ (value (car nexp)) (value (car (cdr (cdr nexp)))))])))
 ;; Note: I'm not a fan of the book's implementation, which assumes ↑.
 
 ;; Gets the first sub-expression from an arithmetic expression
@@ -527,6 +527,169 @@
       [(eq? (operator nexp) (quote ×)) (× (value (1st-sub-exp nexp)) (value (2nd-sub-exp nexp)))]
       [(eq? (operator nexp) (quote ↑)) (↑ (value (1st-sub-exp nexp)) (value (2nd-sub-exp nexp)))])))
 ;; Note: I'm not a fan of the book's implementation, which assumes ↑.
+
+
+;;**********************************************************
+;; Chapter 7
+;;**********************************************************
+
+;; Predicate for determining if a value is an element of the list of atoms or not
+;; Redefined using equal? instead of eq?
+(define member?
+  (lambda (a lat)
+    (cond
+      [(null? lat) #f]
+      [else (or (equal? (car lat) a)
+                (member? a (cdr lat)))])))
+
+;; Determines whether a list of atoms is a set or not
+(define set?
+  (lambda (lat)
+    (cond
+      [(null? lat) #t]
+      [(member? (car lat) (cdr lat)) #f]
+      [else (set? (cdr lat))])))
+
+;; Makes a set out of a list of atoms
+#;(define makeset
+    (lambda (lat)
+      (cond
+        [(null? lat) '()]
+        [(member? (car lat) (cdr lat)) (makeset (cdr lat))]
+        [else (cons (car lat) (makeset (cdr lat)))])))
+
+;; Removes all occurrences of a in lat, a list of atoms
+;; Redefined using equal? instead of eq?
+(define multirember
+  (lambda (a lat)
+    (cond
+      [(null? lat) '()]
+      [(equal? a (car lat)) (multirember a (cdr lat))]
+      [else (cons (car lat)
+                  (multirember a (cdr lat)))])))
+
+;; Makes a set out of a list of atoms
+(define makeset
+  (lambda (lat)
+    (cond
+      [(null? lat) '()]
+      [else (cons (car lat)
+                  (makeset (multirember (car lat) (makeset (cdr lat)))))])))
+
+;; Determines if set1 is a subset of set2 or not
+(define subset?
+  (lambda (set1 set2)
+    (cond
+      [(null? set1) #t]
+      [else (and (member? (car set1) set2)
+                 (subset? (cdr set1) set2))])))
+
+;; Determines if the two sets are equal or not
+(define eqset?
+  (lambda (set1 set2)
+    (and (subset? set1 set2)
+         (subset? set2 set1))))
+
+;; Determines if the two set intersect or not
+(define intersect?
+  (lambda (set1 set2)
+    (cond
+      [(null? set1) #t]
+      [else (or (member? (car set1) set2)
+                (intersect? (cdr set1) set2))])))
+
+;; Returns the intersection of the two sets
+(define intersect
+  (lambda (set1 set2)
+    (cond
+      [(null? set1) '()]
+      [(member? (car set1) set2) (cons (car set1)
+                                       (intersect (cdr set1) set2))]
+      [else (intersect (cdr set1) set2)])))
+
+;; Returns the union of the two sets
+(define union
+  (lambda (set1 set2)
+    (cond
+      [(null? set1) set2]
+      [(member? (car set1) set2) (union (cdr set1) set2)]
+      [else (cons (car set1)
+                  (union (cdr set1) set2))])))
+
+;; Intersects all the sets in the list of sets
+(define intersectall
+  (lambda (l-set)
+    (cond
+      [(null? (cdr l-set)) (car l-set)]
+      [else (intersect (car l-set) (intersectall (cdr l-set)))])))
+
+;; Determines whether an S-expression is a list of only two S-expressions
+(define a-pair?
+  (lambda (x)
+    (cond
+      [(atom? x) #f]
+      [(null? x) #f]
+      [(null? (cdr x)) #f]
+      [else (and (s-exp? (car x))
+                 (s-exp? (car (cdr x)))
+                 (null? (cdr (cdr x))))])))
+
+;; Returns the first S-expression of a list or pair
+(define first
+  (lambda (p)
+    (car p)))
+
+;; Returns the second S-expression of a list or pair
+(define second
+  (lambda (p)
+    (car (cdr p))))
+
+;; Returns the third S-expression of a list
+(define third
+  (lambda (p)
+    (car (cdr (cdr p)))))
+
+;; Builds a pair out of the two S-expressions
+(define build
+  (lambda (s1 s2)
+    (cons s1 (cons s2 '()))))
+
+;; Determines whether a relation is a function or not
+(define fun?
+  (lambda (rel)
+    (set? (firsts rel))))
+
+;; Reverses a pair
+(define revpair
+  (lambda (pair)
+    (build (second pair)
+           (first pair))))
+
+;; Reverses a relation
+(define revrel
+  (lambda (rel)
+    (cond
+      [(null? rel) '()]
+      [else (cons (revpair (car rel))
+                  (revrel (cdr rel)))])))
+
+;; Takes a list and returns a list of the second elements of each sublist
+(define seconds
+  (lambda (l)
+    (cond
+      [(null? l) '()]
+      [else (cons (second (car l))
+                  (seconds (cdr l)))])))
+
+;; Determines whether a function is full or not
+(define fullfun?
+  (lambda (fun)
+    (set? (seconds fun))))
+
+;; Determines whether a function is one-to-one or not
+(define one-to-one?
+  (lambda (fun)
+    (fun? (revrel fun))))
 
 
 ;;**********************************************************
