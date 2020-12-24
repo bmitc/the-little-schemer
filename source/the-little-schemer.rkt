@@ -86,12 +86,12 @@
 ;; Removes the first occurence of the atom, if possible, in the list of atoms
 ;; (Rewritten below in the Chapter 5 section using equal? as instructed by the book)
 #;(define rember
-  (lambda (a lat)
-    (cond
-      [(null? lat) '()]
-      [(eq? a (car lat)) (cdr lat)]
-      [else (cons (car lat)
-                  (rember a (cdr lat)))])))
+    (lambda (a lat)
+      (cond
+        [(null? lat) '()]
+        [(eq? a (car lat)) (cdr lat)]
+        [else (cons (car lat)
+                    (rember a (cdr lat)))])))
 
 ;; Takes a list and returns a list of the first elements of each sublist
 (define firsts
@@ -430,15 +430,15 @@
 ;; Determines if the two lists are equal or not
 ;; (Rewritten below using equal? as instructed by the book)
 #;(define eqlist?
-  (lambda (l1 l2)
-    (cond
-      [(and (null? l1) (null? l2)) #t]
-      [(or (null? l1) (null? l2)) #f]
-      [(and (atom? (car l1)) (atom? (car l2))) (and (eqan? (car l1) (car l2))
-                                                    (eqlist? (cdr l1) (cdr l2)))]
-      [(or (atom? (car l1)) (atom? (car l2))) #f]
-      [else (and (eqlist? (car l1) (car l2))
-                 (eqlist? (cdr l1) (cdr l2)))])))
+    (lambda (l1 l2)
+      (cond
+        [(and (null? l1) (null? l2)) #t]
+        [(or (null? l1) (null? l2)) #f]
+        [(and (atom? (car l1)) (atom? (car l2))) (and (eqan? (car l1) (car l2))
+                                                      (eqlist? (cdr l1) (cdr l2)))]
+        [(or (atom? (car l1)) (atom? (car l2))) #f]
+        [else (and (eqlist? (car l1) (car l2))
+                   (eqlist? (cdr l1) (cdr l2)))])))
 
 ;; Determines if the two S-expressions are equal or not
 (define equal?
@@ -465,6 +465,68 @@
       [(equal? s (car l)) (cdr l)]
       [else (cons (car l)
                   (rember s (cdr l)))])))
+
+
+;;**********************************************************
+;; Chapter 6
+;;**********************************************************
+
+;; Determines if the arithmetic expression aexp contains only numbers besides +, ×, and ↑
+#;(define numbered?
+    (lambda (aexp)
+      (cond
+        [(atom? aexp) (number? aexp)]
+        [(or (eq? (car (cdr aexp)) (quote +))
+             (eq? (car (cdr aexp)) (quote ×))
+             (eq? (car (cdr aexp)) (quote ↑))) (and (numbered? (car aexp)) (numbered? (car (cdr (cdr aexp)))))]
+        [else #f])))
+;; Note: the book assumes aexp is already an arithmetic expression such that we don't need to test that it is
+;; as this implementation does, looking for +, ×, and ↑.
+
+;; Determines if the arithmetic expression aexp contains only numbers besides +, ×, and ↑
+(define numbered?
+  (lambda (aexp)
+    (cond
+      [(atom? aexp) (number? aexp)]
+      [else (and (numbered? (car aexp)) (numbered? (car (cdr (cdr aexp)))))])))
+
+;; The book has two implementations of value for two different representations.
+;; The value for the first representation is what is implemented here.
+
+;; Evaluates the value of a numbered arithmetic expression
+#;(define value
+  (lambda (nexp)
+    (cond
+      [(atom? nexp) nexp] ; Really should ask number? and not just atom?
+      [(eq? (car (cdr nexp)) (quote +)) (+ (value (car nexp)) (value (car (cdr (cdr nexp)))))]
+      [(eq? (car (cdr nexp)) (quote ×)) (× (value (car nexp)) (value (car (cdr (cdr nexp)))))]
+      [(eq? (car (cdr nexp)) (quote ↑)) (↑ (value (car nexp)) (value (car (cdr (cdr nexp)))))])))
+;; Note: I'm not a fan of the book's implementation, which assumes ↑.
+
+;; Gets the first sub-expression from an arithmetic expression
+(define 1st-sub-exp
+  (lambda (aexp)
+    (car aexp)))
+
+;; Gets the second sub-expression from an arithmetic expression
+(define 2nd-sub-exp
+  (lambda (aexp)
+    (car (cdr (cdr aexp)))))
+
+;; Gets the operator from an arithmetic expression
+(define operator
+  (lambda (aexp)
+    (car (cdr aexp))))
+
+;; Evaluates the value of a numbered arithmetic expression
+(define value
+  (lambda (nexp)
+    (cond
+      [(atom? nexp) nexp]
+      [(eq? (operator nexp) (quote +)) (+ (value (1st-sub-exp nexp)) (value (2nd-sub-exp nexp)))]
+      [(eq? (operator nexp) (quote ×)) (× (value (1st-sub-exp nexp)) (value (2nd-sub-exp nexp)))]
+      [(eq? (operator nexp) (quote ↑)) (↑ (value (1st-sub-exp nexp)) (value (2nd-sub-exp nexp)))])))
+;; Note: I'm not a fan of the book's implementation, which assumes ↑.
 
 
 ;;**********************************************************
