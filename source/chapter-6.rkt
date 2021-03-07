@@ -29,9 +29,11 @@
 
 (check-equal? (value 13) 13)
 
-(check-equal? (value '(1 + 3)) 4)
+;; value is rewritten for another representation
+#;(check-equal? (value '(1 + 3)) 4)
 
-(check-equal? (value '(1 + (3 ↑ 4))) 82)
+;; value is rewritten for another representation
+#;(check-equal? (value '(1 + (3 ↑ 4))) 82)
 
 ;;**********************************************************
 ;; The Seventh Commandment
@@ -47,9 +49,14 @@
 
 (check-equal? (cdr '(+ 1 3)) '(1 3))
 
-;; The book has two implementations of value for two different representations.
-;; The value for the first representation is the one implemented, so this test will fail.
-#;(check-equal? (value '(+ 1 3)) 4)
+;; Added test not in the book
+(check-equal? (value '(+ 1 3)) 4)
+
+;; Added test not in the book
+(check-equal? (value '(+ 1 3)) 4)
+
+;; Added test not in the book
+(check-equal? (value '(+ 1 (↑ 3 4))) 82)
 
 ;;**********************************************************
 ;; The Eighth Commandment

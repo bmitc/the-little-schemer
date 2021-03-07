@@ -102,32 +102,35 @@
                   (firsts (cdr l)))])))
 
 ;; Inserts new after the first occurrence, if any, of old in lat, a list of atoms
-(define insertR
-  (lambda (new old lat)
-    (cond
-      [(null? lat) '()]
-      [(eq? old (car lat)) (cons old
-                                 (cons new (cdr lat)))]
-      [else (cons (car lat)
-                  (insertR new old (cdr lat)))])))
+;; (Rewritten using insert-g in Chapter 8.)
+#;(define insertR
+    (lambda (new old lat)
+      (cond
+        [(null? lat) '()]
+        [(eq? old (car lat)) (cons old
+                                   (cons new (cdr lat)))]
+        [else (cons (car lat)
+                    (insertR new old (cdr lat)))])))
 
 ;; Inserts new before the first occurrence, if any, of old in lat, a list of atoms
-(define insertL
-  (lambda (new old lat)
-    (cond
-      [(null? lat) '()]
-      [(eq? old (car lat)) (cons new lat)] ; since (cons old (cdr lat)) = lat when old = (car lat)
-      [else (cons (car lat)
-                  (insertL new old (cdr lat)))])))
+;; (Rewritten using insert-g in Chapter 8.)
+#;(define insertL
+    (lambda (new old lat)
+      (cond
+        [(null? lat) '()]
+        [(eq? old (car lat)) (cons new lat)] ; since (cons old (cdr lat)) = lat when old = (car lat)
+        [else (cons (car lat)
+                    (insertL new old (cdr lat)))])))
 
 ;; Replaces the first occurrence of old, if any, with new, in lat, a list of atoms
-(define subst
-  (lambda (new old lat)
-    (cond
-      [(null? lat) '()]
-      [(eq? old (car lat)) (cons new (cdr lat))]
-      [else (cons (car lat)
-                  (subst new old (cdr lat)))])))
+;; (Rewritten using insert-g in Chapter 8.)
+#;(define subst
+    (lambda (new old lat)
+      (cond
+        [(null? lat) '()]
+        [(eq? old (car lat)) (cons new (cdr lat))]
+        [else (cons (car lat)
+                    (subst new old (cdr lat)))])))
 
 ;; Replaces the first occurence of o1 or o2, if any, in lat, a list of atoms
 (define subst2
@@ -488,7 +491,8 @@
   (lambda (aexp)
     (cond
       [(atom? aexp) (number? aexp)]
-      [else (and (numbered? (car aexp)) (numbered? (car (cdr (cdr aexp)))))])))
+      [else (and (numbered? (car aexp))
+                 (numbered? (car (cdr (cdr aexp)))))])))
 
 ;; The book has two implementations of value for two different representations.
 ;; The value for the first representation is what is implemented here.
@@ -506,7 +510,7 @@
 ;; Gets the first sub-expression from an arithmetic expression
 (define 1st-sub-exp
   (lambda (aexp)
-    (car aexp)))
+    (car (cdr aexp))))
 
 ;; Gets the second sub-expression from an arithmetic expression
 (define 2nd-sub-exp
@@ -516,16 +520,17 @@
 ;; Gets the operator from an arithmetic expression
 (define operator
   (lambda (aexp)
-    (car (cdr aexp))))
+    (car aexp)))
 
 ;; Evaluates the value of a numbered arithmetic expression
-(define value
-  (lambda (nexp)
-    (cond
-      [(atom? nexp) nexp]
-      [(eq? (operator nexp) (quote +)) (+ (value (1st-sub-exp nexp)) (value (2nd-sub-exp nexp)))]
-      [(eq? (operator nexp) (quote ×)) (× (value (1st-sub-exp nexp)) (value (2nd-sub-exp nexp)))]
-      [(eq? (operator nexp) (quote ↑)) (↑ (value (1st-sub-exp nexp)) (value (2nd-sub-exp nexp)))])))
+;; (Rewritten using atom-to-function in  Chapter 8.)
+#;(define value
+    (lambda (nexp)
+      (cond
+        [(atom? nexp) nexp]
+        [(eq? (operator nexp) (quote +)) (+ (value (1st-sub-exp nexp)) (value (2nd-sub-exp nexp)))]
+        [(eq? (operator nexp) (quote ×)) (× (value (1st-sub-exp nexp)) (value (2nd-sub-exp nexp)))]
+        [(eq? (operator nexp) (quote ↑)) (↑ (value (1st-sub-exp nexp)) (value (2nd-sub-exp nexp)))])))
 ;; Note: I'm not a fan of the book's implementation, which assumes ↑.
 
 
@@ -690,6 +695,256 @@
 (define one-to-one?
   (lambda (fun)
     (fun? (revrel fun))))
+
+
+;;**********************************************************
+;; Chapter 8
+;;**********************************************************
+
+;; Removes the first occurence of the atom a where (test? a) is true in the list of atoms
+;; (Rewritten below as instructed by the book)
+#;(define rember-f
+    (lambda (test? a l)
+      (cond
+        [(null? l) '()]
+        [(test? a (car l)) (cdr l)]
+        [else (cons (car l)
+                    (rember-f test? a (cdr l)))])))
+
+;; Returns a function that tests equality against the atom a
+(define eq?-c
+  (lambda (a)
+    (lambda (x)
+      (eq? x a))))
+
+;; A function to test if the argument is eq? to 'salad
+(define eq?-salad (eq?-c 'salad))
+
+;; Removes the first occurence of the atom a where (test? a) is true in the list of atoms
+(define rember-f
+  (lambda (test?)
+    (lambda (a l)
+      (cond
+        [(null? l) '()]
+        [(test? a (car l)) (cdr l)]
+        [else (cons (car l)
+                    ((rember-f test?) a (cdr l)))]))))
+
+;; Removes the first occurence of the atom a, using eq?, in the list of atoms
+(define rember-eq? (rember-f eq?))
+
+;; Inserts new before the first occurrence, if any, of old in lat, a list of atoms
+(define insertL-f
+  (lambda (test?)
+    (lambda (new old lat)
+      (cond
+        [(null? lat) '()]
+        [(test? old (car lat)) (cons new lat)] ; since (cons old (cdr lat)) = lat when old = (car lat)
+        [else (cons (car lat)
+                    ((insertL-f test?) new old (cdr lat)))]))))
+
+;; Inserts new after the first occurrence, if any, of old in lat, a list of atoms
+(define insertR-f
+  (lambda (test?)
+    (lambda (new old lat)
+      (cond
+        [(null? lat) '()]
+        [(test? old (car lat)) (cons old
+                                     (cons new (cdr lat)))]
+        [else (cons (car lat)
+                    ((insertR-f test?) new old (cdr lat)))]))))
+
+;; Conses new onto the cons of old and l
+(define seqL
+  (lambda (new old l)
+    (cons new (cons old l))))
+
+;; Conses old onto the cons of new and l
+(define seqR
+  (lambda (new old l)
+    (cons old (cons new l))))
+
+(define insert-g
+  (lambda (seq)
+    (lambda  (new old l)
+      (cond
+        [(null? l) '()]
+        [(eq? old (car l)) (seq new old (cdr l))]
+        [else (cons (car l)
+                    ((insert-g seq) new old (cdr l)))]))))
+
+;; Inserts new before the first occurrence, if any, of old in lat, a list of atoms
+(define insertL (insert-g seqL))
+
+;; Inserts new after the first occurrence, if any, of old in lat, a list of atoms
+(define insertR (insert-g seqR))
+
+(define seqS
+  (lambda (new old l)
+    (cons new l)))
+
+;; Replaces the first occurrence of old, if any, with new, in lat, a list of atoms
+(define subst (insert-g seqS))
+
+(define seqrem
+  (lambda (new old l)
+    l))
+
+(define yyy
+  (lambda (a l)
+    ((insert-g seqrem) #f a l)))
+
+;; Takes '+, '×, and '↑ and returns +, ×, and ↑, respectively
+(define atom-to-function
+  (lambda (x)
+    (cond
+      [(eq? x (quote +)) +]
+      [(eq? x (quote ×)) ×]
+      [else ↑])))
+
+;; Evaluates the value of a numbered arithmetic expression
+(define value
+  (lambda (nexp)
+    (cond
+      [(atom? nexp) nexp]
+      [else ((atom-to-function (operator nexp))
+             (value (1st-sub-exp nexp))
+             (value (2nd-sub-exp nexp)))])))
+
+;; Removes all occurrences of a, using test?, in lat, a list of atoms
+(define multirember-f
+  (lambda (test?)
+    (lambda (a lat)
+      (cond
+        [(null? lat) '()]
+        [(test? a (car lat)) ((multirember-f test?) a (cdr lat))]
+        [else (cons (car lat)
+                    ((multirember-f test?) a (cdr lat)))]))))
+
+;; Removes all occurrences of a, using eq?, in lat, a list of atoms
+(define multirember-eq? (multirember-f eq?))
+
+;; A function to test if the argument is eq? to 'tuna
+(define eq?-tuna (eq?-c (quote tuna)))
+
+;; Removes all occurences that pass the test test? in lat, a list of atoms
+(define multiremberT
+  (lambda (test? lat)
+    (cond [(null? lat) '()]
+          [(test? (car lat)) (multiremberT test? (cdr lat))]
+          [else (cons (car lat)
+                      (multiremberT test? (cdr lat)))])))
+
+;; Looks at every atom of lat, a list of atoms, to see whether
+;; the atom is equal, using eq?, to a. Those atoms that are not
+;; equal are collected in one list ls1. The atoms that are equal
+;; are collected in a second list ls2. Finally, it determines the
+;; value of (f ls1 ls2).
+(define multirember&co
+  (lambda (a lat col)
+    (cond [(null? lat) (col '() '())]
+          [(eq? (car lat) a) (multirember&co a
+                                             (cdr lat)
+                                             (lambda (newlat seen)
+                                               (col newlat (cons (car lat) seen))))]
+          [else (multirember&co a
+                                (cdr lat)
+                                (lambda (newlat seen)
+                                  (col (cons (car lat) newlat) seen)))])))
+
+(define a-friend
+  (lambda (x y)
+    (null? y)))
+
+(define new-friend
+  (lambda (newlat seen)
+    (a-friend newlat
+              (cons (car 'tuna) seen))))
+
+(define latest-friend
+  (lambda (newlat seen)
+    (a-friend (cons 'and newlat)
+              seen)))
+
+(define last-friend
+  (lambda (x y)
+    (length x)))
+
+;; Inserts new to the left of oldL and to the right of oldR in lat, a list of atoms,
+;; for every occurrence of oldL and oldR
+(define multiinsertLR
+  (lambda (new oldL oldR lat)
+    (cond [(null? lat) '()]
+          [(eq? (car lat) oldL) (cons new
+                                      (cons oldL
+                                            (multiinsertLR new oldL oldR (cdr lat))))]
+          [(eq? (car lat) oldR) (cons oldR
+                                      (cons new
+                                            (multiinsertLR new oldL oldR (cdr lat))))]
+          [else (cons (car lat)
+                      (multiinsertLR new oldL oldR (cdr lat)))])))
+
+(define multiinsertLR&co
+  (lambda (new oldL oldR lat col)
+    (cond [(null? lat) (col '() 0 0)]
+          [(eq? (car lat) oldL)
+           (multiinsertLR&co new oldL oldR (cdr lat)
+                             (lambda (newlat L R)
+                               (col (cons new
+                                          (cons oldL newlat))
+                                    (add1 L) R)))]
+          [(eq? (car lat) oldR)
+           (multiinsertLR&co new oldL oldR (cdr lat)
+                             (lambda (newlat L R)
+                               (col (cons oldR
+                                          (cons new newlat))
+                                    L (add1 R))))]
+          [else
+           (multiinsertLR&co new oldL oldR (cdr lat)
+                             (lambda (newlat L R)
+                               (col (cons (car lat) newlat) L R)))])))
+
+;; Determines whether the number is even or not
+(define even?
+  (lambda (n)
+    (= (× (÷ n 2) 2) n)))
+
+;; Removes all odd numbers from a list of nested lists
+(define evens-only*
+  (lambda (l)
+    (cond [(null? l) '()]
+          [(atom? (car l))
+           (cond [(even? (car l)) (cons (car l)
+                                        (evens-only* (cdr l)))]
+                 [else (evens-only* (cdr l))])]
+          [else (cons (evens-only* (car l))
+                      (evens-only* (cdr l)))])))
+
+(define evens-only*&co
+  (lambda (l col)
+    (cond [(null? l) (col '() 1 0)]
+          [(atom? (car l))
+           (cond [(even? (car l))
+                  (evens-only*&co (cdr l)
+                                  (lambda (newl p s)
+                                    (col (cons (car l) newl)
+                                         (× (car l) p) s)))]
+                 [else (evens-only*&co (cdr l)
+                                       (lambda (newl p s)
+                                         (col newl
+                                              p (+ (car l) s))))])]
+          [else (evens-only*&co (car l)
+                                (lambda (al ap as)
+                                  (evens-only*&co (cdr l)
+                                                  (lambda (dl dp ds)
+                                                    (col (cons al dl)
+                                                         (× ap dp)
+                                                         (+ as ds))))))])))
+
+(define the-last-friend
+  (lambda (newl product sum)
+    (cons sum
+          (cons product newl))))
 
 
 ;;**********************************************************
