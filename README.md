@@ -1,10 +1,10 @@
 # The Little Schemer
 
-_The Little Schemer_ uses a Scheme-like language, and this codebase contains Racket implementations and annotations for the code and exercises found in the book. The idea was to both learn the material in the book and Racket.
+_The Little Schemer_ uses a Scheme-like language, and this codebase contains Racket implementations and annotations, in the form of tests, for the code and exercises found in the book. The idea was to both learn the material in the book and to use Racket more.
 
 ## Context
 
-I read through parts of this book a few years ago but was just reading through it and didn't do any coding. I started to go through it again some time ago by writing Racket code, but that tailed off after a few chapters. This third time around, I'm going through the book more thoroughly, improving the implementations I had already started, but now I've added proper implementations of the book's primitive functions using Racket contracts and have annotated the examples using tests via RackUnit. This is proving to be more streamlined and helpful.
+I read through parts of this book a few years ago but was just reading through it and didn't do any coding. I started to go through it again some time ago by writing Racket code, but that tailed off after a few chapters. This third time around, I have gone through the book more thoroughly, improving the implementations I had already started, but now I have added proper implementations of the book's primitive functions using Racket contracts and have annotated the examples using tests via RackUnit. This proved to be more streamlined and helpful.
 
 ## What I learned
 
