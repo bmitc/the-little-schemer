@@ -803,13 +803,14 @@
       [else ↑])))
 
 ;; Evaluates the value of a numbered arithmetic expression
-(define value
-  (lambda (nexp)
-    (cond
-      [(atom? nexp) nexp]
-      [else ((atom-to-function (operator nexp))
-             (value (1st-sub-exp nexp))
-             (value (2nd-sub-exp nexp)))])))
+;; (Rewritten below in Chapter 10)
+#;(define value
+    (lambda (nexp)
+      (cond
+        [(atom? nexp) nexp]
+        [else ((atom-to-function (operator nexp))
+               (value (1st-sub-exp nexp))
+               (value (2nd-sub-exp nexp)))])))
 
 ;; Removes all occurrences of a, using test?, in lat, a list of atoms
 (define multirember-f
@@ -1018,6 +1019,197 @@
     ((lambda (f) (f f))
      (lambda (f)
        (le (lambda (x) ((f f) x)))))))
+
+
+;;**********************************************************
+;; Chapter 10
+;;**********************************************************
+
+;; Builds an entry from a set of names and a list of values
+(define new-entry build)
+
+;; Looks up the value corresponding to the name in the entry
+;; and calls entry-f on name if the name is not in the entry
+(define lookup-in-entry
+  (lambda (name entry entry-f)
+    (lookup-in-entry-help name
+                          (first entry)
+                          (second entry)
+                          entry-f)))
+
+;; Helper function for lookup-in-entry
+(define lookup-in-entry-help
+  (lambda (name names values entry-f)
+    (cond [(null? names) (entry-f name)]
+          [(eq? (car names) name) (car values)]
+          [else (lookup-in-entry-help name
+                                      (cdr names)
+                                      (cdr values)
+                                      entry-f)])))
+
+;; Takes an entry and table and returns a new table with the
+;; entry at the front
+(define extend-table cons)
+
+;; Looks up the value corresponding to the name in the table, using
+;; the first value found, and calls entry-f on name if the name is not
+;; found in the entries listed in the table
+(define lookup-in-table
+  (lambda (name table table-f)
+    (cond [(null? table) (table-f name)]
+          [else (lookup-in-entry name
+                                 (car table)
+                                 (lambda (name)
+                                   (lookup-in-table name
+                                                    (cdr table)
+                                                    (table-f))))])))
+
+;; Converts an expression to an action
+(define expression-to-action
+  (lambda (e)
+    (cond [(atom? e) (atom-to-action e)]
+          [else (list-to-action e)])))
+
+;; Converts an atom to an action
+(define atom-to-action
+  (lambda (e)
+    (cond [(number? e) *const]
+          [(eq? e #t) *const]
+          [(eq? e #f) *const]
+          [(eq? e 'cons) *const]
+          [(eq? e 'car) *const]
+          [(eq? e 'cdr) *const]
+          [(eq? e 'null?) *const]
+          [(eq? e 'eq?) *const]
+          [(eq? e 'atom?) *const]
+          [(eq? e 'zero?) *const]
+          [(eq? e 'add1) *const]
+          [(eq? e 'sub1) *const]
+          [(eq? e 'number?) *const]
+          [else *identifier])))
+
+;; Converts a list to an action
+(define list-to-action
+  (lambda (e)
+    (cond [(atom? (car e))
+           (cond [(eq? (car e) 'quote) *quote]
+                 [(eq? (car e) 'lambda) *lambda]
+                 [(eq? (car e) 'cond) *cond]
+                 [else *application])]
+          [else *application])))
+
+(define value
+  (lambda (e)
+    (meaning e '())))
+
+(define meaning
+  (lambda (e table)
+    ((expression-to-action e) e table)))
+
+(define *const
+  (lambda (e table)
+    (cond [(number? e) e]
+          [(eq? e #t) #t]
+          [(eq? e #f) #f]
+          [else (build 'primitive e)])))
+
+(define *quote
+  (lambda (e table)
+    (text-of e)))
+
+(define text-of second)
+
+(define *identifier
+  (lambda (e table)
+    (lookup-in-table e table initial-table)))
+
+(define initial-table
+  (lambda (name)
+    (car '())))
+
+(define *lambda
+  (lambda (e table)
+    (build 'non-primitive
+           (cons table (cdr e)))))
+
+(define table-of first)
+
+(define formals-of second)
+
+(define body-of third)
+
+(define evcon
+  (lambda (lines table)
+    (cond [(else? (question-of (car lines)))
+           (meaning (answer-of (car lines)) table)]
+          [(meaning (question-of (car lines)) table)
+           (meaning (answer-of (car lines)) table)]
+          [else (evcon (cdr lines) table)])))
+
+(define else?
+  (lambda (x)
+    (cond
+      [(atom? x) (eq? x 'else)]
+      (else #f))))
+
+(define question-of first)
+
+(define answer-of second)
+
+(define *cond
+  (lambda (e table)
+    (evcon (cond-lines-of e) table)))
+
+(define cond-lines-of cdr)
+
+(define evlis
+  (lambda (args table)
+    (cond [(null? args) '()]
+          [else (cons (meaning (car args) table)
+                      (evlis (cdr args) table))])))
+
+(define *application
+  (lambda (e table)
+    (apply (meaning (function-of e) table)
+           (evlis (arguments-of e) table))))
+
+(define function-of car)
+
+(define arguments-of cdr)
+
+(define primitive?
+  (lambda (l)
+    (eq? (first l) 'primitive)))
+
+(define non-primitive?
+  (lambda (l)
+    (eq? (first l) 'non-primitive)))
+
+(define apply
+  (lambda (fun vals)
+    (cond [(primitive? fun) (apply-primitive (second fun) vals)]
+          [(non-primitive? fun) (apply-closure (second fun) vals)])))
+
+(define apply-primitive
+  (lambda (name vals)
+    (cond [(eq? name 'cons) (cons (first vals) (second vals))]
+          [(eq? name 'car) (car (first vals))]
+          [(eq? name 'cdr) (cdr (first vals))]
+          [(eq? name 'null?) (null? (first vals))]
+          [(eq? name 'eq?) (eq? (first vals) (second vals))]
+          [(eq? name 'atom?) (atom? (first vals))]
+          [(eq? name 'add1) (add1 (first vals))]
+          [(eq? name'sub1) (sub1 (first vals))]
+          [(eq? name 'number?) (number? (first vals))])))
+
+(define apply-closure
+  (lambda (closure vals)
+    (meaning (body-of closure)
+             (extend-table
+              (new-entry
+               (formals-of closure)
+               vals)
+              (table-of closure)))))
 
 
 ;;**********************************************************
